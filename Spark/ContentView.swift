@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    // Test comment to check Git
     var body: some View {
         VStack {
             Image(systemName: "globe")
