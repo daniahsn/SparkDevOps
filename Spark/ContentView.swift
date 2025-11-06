@@ -14,6 +14,7 @@ struct ContentView: View {
             List {
                 NavigationLink("Hello World", destination: HelloWorld())
                 NavigationLink("Styles", destination: StyleDemo())
+                NavigationLink("Local storage", destination: LocalStorage())
                 NavigationLink("Location Trigger", destination: LocationTrigger())
                 NavigationLink("Weather Trigger", destination: WeatherTrigger())
                 NavigationLink("Emotion Trigger", destination: EmotionTrigger())

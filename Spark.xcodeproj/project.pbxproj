@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E98F1C6C2EBD44D9001744C2 /* OpenMeteoSdk in Frameworks */ = {isa = PBXBuildFile; productRef = E98F1C6B2EBD44D9001744C2 /* OpenMeteoSdk */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E9FD8A8E2EB9AB2F007B2F8A /* Spark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E98F1C6C2EBD44D9001744C2 /* OpenMeteoSdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Spark;
 			packageProductDependencies = (
+				E98F1C6B2EBD44D9001744C2 /* OpenMeteoSdk */,
 			);
 			productName = Spark;
 			productReference = E9FD8A8E2EB9AB2F007B2F8A /* Spark.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = E9FD8A852EB9AB2F007B2F8A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E98F1C6A2EBD44D9001744C2 /* XCRemoteSwiftPackageReference "sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E9FD8A8F2EB9AB2F007B2F8A /* Products */;
 			projectDirPath = "";
@@ -336,6 +345,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E98F1C6A2EBD44D9001744C2 /* XCRemoteSwiftPackageReference "sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/open-meteo/sdk.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E98F1C6B2EBD44D9001744C2 /* OpenMeteoSdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E98F1C6A2EBD44D9001744C2 /* XCRemoteSwiftPackageReference "sdk" */;
+			productName = OpenMeteoSdk;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E9FD8A862EB9AB2F007B2F8A /* Project object */;
 }
