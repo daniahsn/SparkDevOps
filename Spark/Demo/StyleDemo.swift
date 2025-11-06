@@ -6,43 +6,6 @@
 //
 
 import SwiftUI
-
-extension Color {
-    static let brandDominant = Color(hex: "#FFFFFF")
-    static let brandAccent = Color(hex: "#FF8D28")
-    static let brandSecondary = Color(hex: "#FFCC02")
-}
-
-extension Color {
-    init(hex: String, opacity: Double = 1.0) {
-        var hexString = hex.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).uppercased()
-        if hexString.hasPrefix("#"){hexString.removeFirst()}
-        
-        var rgb: UInt64 = 0
-        Scanner(string: hexString).scanHexInt64(&rgb)
-        
-        let r, g, b: Double
-        switch hexString.count {
-        case 6:
-            r = Double((rgb & 0xFF0000) >> 16) / 255.0
-            g = Double((rgb & 0x00FF00) >> 8) / 255.0
-            b = Double(rgb & 0x0000FF) / 255.0
-        default:
-            r = 1; g = 1; b = 1
-        }
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: opacity)
-    }
-}
-
-enum SparkFont {
-    static func ui(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .default)
-    }
-    
-    static func logo(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .serif)
-    }
-}
     
 struct ColorSwatch: View {
     let title: String
