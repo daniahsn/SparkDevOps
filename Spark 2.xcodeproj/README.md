@@ -14,7 +14,7 @@
 
 ## A4 Submission
 
-You can access the A4 submission here: [A4 Submission]([https://example.com/dummy-link](https://docs.google.com/document/d/1p4frpFCaJBQH9NO0pSlOyQ1TS-4N9pkZzp3fsqpslZE/edit?usp=sharing))
+You can access the A4 submission here: https://example.com/dummy-link](https://docs.google.com/document/d/1p4frpFCaJBQH9NO0pSlOyQ1TS-4N9pkZzp3fsqpslZE/edit?usp=sharing
 
 ---
 
