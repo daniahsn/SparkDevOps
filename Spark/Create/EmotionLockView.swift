@@ -1,10 +1,3 @@
-//
-//  EmotionLockView.swift
-//  Spark
-//
-//  Created by Julius Jung on 20.11.2025.
-//
-
 import SwiftUI
 
 struct EmotionLockView: View {
@@ -13,7 +6,8 @@ struct EmotionLockView: View {
     let content: String
     let geofence: Geofence?
     let weather: Weather?
-    let onNext: (Emotion?) -> Void
+
+    @Binding var path: NavigationPath
 
     @State private var selectedEmotion: Emotion? = nil
 
@@ -24,7 +18,7 @@ struct EmotionLockView: View {
             Text("Emotion Lock")
                 .font(BrandStyle.title)
 
-            // ------- Explanatory -------
+            // ------- Explanation -------
             Text("Choose an emotion that must match to unlock your note.")
                 .font(BrandStyle.body)
                 .foregroundColor(.black)
@@ -34,7 +28,6 @@ struct EmotionLockView: View {
             // ------- Emotion List -------
             ScrollView {
                 VStack(spacing: 0) {
-
                     ForEach(Emotion.allCases, id: \.self) { emo in
 
                         EmotionRow(emotion: emo, isSelected: selectedEmotion == emo)
@@ -64,11 +57,11 @@ struct EmotionLockView: View {
 
             Spacer()
 
-            // ------- Buttons -------
             VStack(spacing: 12) {
 
+                // Skip
                 Button {
-                    onNext(nil)
+                    path.append("unlock")
                 } label: {
                     Text("Skip Emotion")
                         .font(BrandStyle.button)
@@ -79,8 +72,9 @@ struct EmotionLockView: View {
                         .cornerRadius(12)
                 }
 
+                // Use
                 Button {
-                    onNext(selectedEmotion)
+                    path.append("unlock")
                 } label: {
                     Text("Use Emotion")
                         .font(BrandStyle.button)
@@ -96,9 +90,7 @@ struct EmotionLockView: View {
     }
 }
 
-
-// MARK: - Emotion Row View
-
+// MARK: - Row
 private struct EmotionRow: View {
     let emotion: Emotion
     let isSelected: Bool

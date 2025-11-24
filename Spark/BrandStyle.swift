@@ -46,3 +46,7 @@ enum BrandStyle {
     static let button = SparkFont.ui(17, weight: .medium)
     static let sectionTitle = SparkFont.ui(19, weight: .semibold)
 }
+
+extension Notification.Name {
+    static let resetCreateFlow = Notification.Name("resetCreateFlow")
+}

@@ -29,7 +29,7 @@ struct ContentView: View {
                     Image(systemName: "magnifyingglass")
                     Text("Search")
                 }
-        }
+        }.tint(BrandStyle.accent)
     }
 }
 

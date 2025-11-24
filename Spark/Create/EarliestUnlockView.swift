@@ -1,10 +1,3 @@
-//
-//  EarliestUnlockView.swift
-//  Spark
-//
-//  Created by Julius Jung on 21.11.2025.
-//
-
 import SwiftUI
 
 struct EarliestUnlockView: View {
@@ -17,80 +10,65 @@ struct EarliestUnlockView: View {
     let weather: Weather?
     let emotion: Emotion?
 
-    @State private var useDuration = true      // Time vs Date
-    @State private var navigateToFinish = false
+    @Binding var path: NavigationPath
 
-    // Duration values
+    @State private var useDuration = true
+
     @State private var years: Int = 0
     @State private var months: Int = 0
-    @State private var days: Int = 2      // default 2 days
+    @State private var days: Int = 2
     @State private var hours: Int = 0
 
-    // Absolute date/time
     @State private var unlockDate: Date = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
 
-    var body: some View {
-        VStack(spacing: 24) {
+    enum WheelType { case years, months, days, hours }
+    @State private var wheelType: WheelType? = nil
+    @State private var showWheelPicker = false
 
-            // ------- Title -------
+    var body: some View {
+        VStack(spacing: 10) {
+
             Text("Unlock Time")
                 .font(BrandStyle.title)
 
-            // ------- Explanation -------
             Text("Choose when the entry can unlock earliest.")
                 .font(BrandStyle.body)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            // ------- Mode Switch (Time vs Date) -------
+            // Mode Switch
             HStack {
-                Button(action: { useDuration = true }) {
+                Button { useDuration = true } label: {
                     Text("Time")
                         .font(BrandStyle.button)
                         .foregroundColor(useDuration ? .white : BrandStyle.accent)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 20)
-                        .background(
-                            useDuration ? BrandStyle.accent : Color.white
-                        )
+                        .background(useDuration ? BrandStyle.accent : .white)
                         .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(BrandStyle.accent, lineWidth: 1)
-                        )
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(BrandStyle.accent))
                 }
 
-                Button(action: { useDuration = false }) {
+                Button { useDuration = false } label: {
                     Text("Date")
                         .font(BrandStyle.button)
                         .foregroundColor(!useDuration ? .white : BrandStyle.accent)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 20)
-                        .background(
-                            !useDuration ? BrandStyle.accent : Color.white
-                        )
+                        .background(!useDuration ? BrandStyle.accent : .white)
                         .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(BrandStyle.accent, lineWidth: 1)
-                        )
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(BrandStyle.accent))
                 }
             }
 
-            // ------- Content -------
-            if useDuration {
-                durationSelector
-            } else {
-                dateSelector
-            }
+            if useDuration { durationSelector } else { dateSelector }
 
             Spacer()
 
-            // ------- Finish Button -------
             Button {
                 saveEntry()
-                navigateToFinish = true
+                path.append("finish")
             } label: {
                 Text("Finish")
                     .font(BrandStyle.button)
@@ -102,43 +80,47 @@ struct EarliestUnlockView: View {
             }
         }
         .padding()
-        .navigationDestination(isPresented: $navigateToFinish) {
-            FinishedView()
+        .overlay {
+            if showWheelPicker { wheelDialog }
         }
     }
 
-    // MARK: - Duration View
+    // MARK: Duration UI
     private var durationSelector: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
 
             Text("Unlock after:")
                 .font(BrandStyle.sectionTitle)
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack {
-                pickerColumn(label: "Years", range: 0..<10, binding: $years)
-                pickerColumn(label: "Months", range: 0..<12, binding: $months)
-                pickerColumn(label: "Days", range: 0..<31, binding: $days)
-                pickerColumn(label: "Hours", range: 0..<24, binding: $hours)
+            VStack(spacing: 14) {
+                durationRow(label: "Years", value: years) { showWheel(.years) }
+                durationRow(label: "Months", value: months) { showWheel(.months) }
+                durationRow(label: "Days", value: days) { showWheel(.days) }
+                durationRow(label: "Hours", value: hours) { showWheel(.hours) }
             }
-            .padding()
-            .background(BrandStyle.card)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(BrandStyle.accent, lineWidth: 1)
-            )
+            .padding(12)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(BrandStyle.accent))
         }
     }
 
-    // MARK: - Date Picker View
+    private func durationRow(label: String, value: Int, onTap: @escaping () -> Void) -> some View {
+        HStack {
+            Text(label).font(BrandStyle.body)
+
+            Spacer()
+
+            Text("\(value)")
+                .font(BrandStyle.body)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 14)
+                .background(RoundedRectangle(cornerRadius: 8).stroke(BrandStyle.accent))
+                .onTapGesture(perform: onTap)
+        }
+    }
+
+    // MARK: Date Picker
     private var dateSelector: some View {
-        VStack(spacing: 16) {
-
-            Text("Unlock on:")
-                .font(BrandStyle.sectionTitle)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
+        VStack {
             DatePicker(
                 "",
                 selection: $unlockDate,
@@ -146,46 +128,64 @@ struct EarliestUnlockView: View {
                 displayedComponents: [.date, .hourAndMinute]
             )
             .datePickerStyle(.graphical)
-            .padding()
-            .background(BrandStyle.card)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(BrandStyle.accent, lineWidth: 1)
-            )
+            .tint(BrandStyle.accent)
+            .padding(12)
         }
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(BrandStyle.accent))
     }
 
-    // MARK: - Picker Column
-    private func pickerColumn(label: String, range: Range<Int>, binding: Binding<Int>) -> some View {
-        VStack {
-            Text(label)
-                .font(BrandStyle.caption)
-                .foregroundColor(BrandStyle.textSecondary)
+    // MARK: Wheel Dialog
+    private var wheelDialog: some View {
+        ZStack {
+            Color.black.opacity(0.25).ignoresSafeArea()
 
-            Picker(label, selection: binding) {
-                ForEach(range, id: \.self) { v in
-                    Text("\(v)")
-                        .tag(v)
+            VStack(spacing: 0) {
+
+                Picker("", selection: currentWheelBinding) {
+                    ForEach(0..<1001, id: \.self) { v in Text("\(v)").tag(v) }
                 }
+                .pickerStyle(.wheel)
+                .frame(height: 160)
+                .background(.ultraThinMaterial)
+                .cornerRadius(16)
+
+                Button("Done") {
+                    showWheelPicker = false
+                }
+                .font(BrandStyle.button)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(BrandStyle.accent)
+                .cornerRadius(12)
+                .padding(.top, 10)
+                .padding(.horizontal, 20)
             }
-            .frame(width: 70)
-            .clipped()
+            .frame(width: 250)
         }
     }
 
-    // MARK: - Save Entry
+    private var currentWheelBinding: Binding<Int> {
+        switch wheelType {
+        case .years: return $years
+        case .months: return $months
+        case .days: return $days
+        case .hours: return $hours
+        case .none: return .constant(0)
+        }
+    }
+
+    private func showWheel(_ type: WheelType) {
+        wheelType = type
+        showWheelPicker = true
+    }
+
     private func saveEntry() {
         let earliestUnlock: Date
 
         if useDuration {
-            let components = DateComponents(
-                year: years,
-                month: months,
-                day: days,
-                hour: hours
-            )
-            earliestUnlock = Calendar.current.date(byAdding: components, to: Date())!
+            let comp = DateComponents(year: years, month: months, day: days, hour: hours)
+            earliestUnlock = Calendar.current.date(byAdding: comp, to: Date())!
         } else {
             earliestUnlock = unlockDate
         }
@@ -197,8 +197,8 @@ struct EarliestUnlockView: View {
             weather: weather,
             emotion: emotion,
             creationDate: Date(),
-            unlockedAt: nil,
-            earliestUnlock: earliestUnlock       // ← NEW FIELD
+            earliestUnlock: earliestUnlock,
+            unlockedAt: nil
         )
 
         storage.add(entry)

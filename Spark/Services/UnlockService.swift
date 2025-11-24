@@ -26,9 +26,7 @@ final class UnlockService {
 
         if entry.unlockedAt != nil { return false }
 
-        // must be ≥ 1 day old
-        guard let dayBefore = Calendar.current.date(byAdding: .day, value: -1, to: Date()),
-              entry.creationDate < dayBefore else {
+        guard Date() >= entry.earliestUnlock else {
             return false
         }
 

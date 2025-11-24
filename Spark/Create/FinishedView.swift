@@ -1,26 +1,42 @@
+import SwiftUI
+
 struct FinishedView: View {
-    @Environment(\.dismiss) var dismiss
+
+    @Binding var path: NavigationPath
 
     var body: some View {
-        VStack(spacing: 32) {
-            Image(systemName: "lock.fill")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80)
-                .foregroundColor(BrandStyle.primary)
+        ZStack {
+            BrandStyle.accent
+                .ignoresSafeArea()
 
-            Text("Entry successfully locked and saved!")
-                .font(BrandStyle.title)
+            VStack(spacing: 32) {
 
-            Button("Return to Home") {
-                dismiss()
+                Image(systemName: "lock.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 90)
+                    .foregroundColor(.white)
+
+                Text("Entry successfully locked and saved!")
+                    .font(BrandStyle.title)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                Button {
+                    NotificationCenter.default.post(name: .resetCreateFlow, object: nil)
+                    path = NavigationPath()     // ← return to root
+                } label: {
+                    Text("Return to Home")
+                        .font(BrandStyle.button)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal, 40)
             }
-            .font(BrandStyle.button)
-            .padding()
-            .background(BrandStyle.primary)
-            .foregroundColor(.white)
-            .cornerRadius(12)
         }
-        .padding()
     }
 }

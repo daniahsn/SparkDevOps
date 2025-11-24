@@ -12,6 +12,10 @@ struct SparkApp: App {
     
     @StateObject private var env = AppEnvironment()
     
+    init() {
+        UITabBar.appearance().tintColor = UIColor(BrandStyle.accent)
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()

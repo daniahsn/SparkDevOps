@@ -19,6 +19,7 @@ struct SparkEntry: Identifiable, Codable {
     var geofence: Geofence?
     var weather: Weather?
     var emotion: Emotion?
+    var earliestUnlock: Date
 
     // unlock state
     var unlockedAt: Date?   // nil = locked
@@ -31,6 +32,7 @@ struct SparkEntry: Identifiable, Codable {
         weather: Weather? = nil,
         emotion: Emotion? = nil,
         creationDate: Date = Date(),
+        earliestUnlock: Date? = nil,
         unlockedAt: Date? = nil
     ) {
         self.id = id
@@ -41,6 +43,10 @@ struct SparkEntry: Identifiable, Codable {
         self.weather = weather
         self.emotion = emotion
         self.unlockedAt = unlockedAt
+
+        // default: creationDate + 1 day
+        self.earliestUnlock = earliestUnlock ??
+            Calendar.current.date(byAdding: .day, value: 1, to: creationDate)!
     }
 
     var isLocked: Bool {
