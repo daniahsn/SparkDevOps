@@ -110,3 +110,11 @@ struct CreateView: View {
         }
     }
 }
+
+#Preview {
+    CreateView()
+        .environmentObject(LocationService())
+        .environmentObject(WeatherService())
+        .environmentObject(EmotionService.shared)
+        .environmentObject(StorageService.shared)
+}

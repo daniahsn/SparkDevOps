@@ -204,3 +204,17 @@ struct EarliestUnlockView: View {
         storage.add(entry)
     }
 }
+
+#Preview {
+    NavigationStack {
+        EarliestUnlockView(
+            title: "Sample Title",
+            content: "Sample content for preview",
+            geofence: nil,
+            weather: nil,
+            emotion: nil,
+            path: .constant(NavigationPath())
+        )
+        .environmentObject(StorageService.shared)
+    }
+}

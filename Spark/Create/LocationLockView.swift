@@ -311,3 +311,14 @@ final class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
         onUpdate([])
     }
 }
+
+#Preview {
+    NavigationStack {
+        LocationLockView(
+            title: "Sample Title",
+            content: "Sample content for preview",
+            path: .constant(NavigationPath())
+        )
+        .environmentObject(LocationService())
+    }
+}

@@ -133,3 +133,15 @@ private struct EmotionRow: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        EmotionLockView(
+            title: "Sample Title",
+            content: "Sample content for preview",
+            geofence: nil,
+            weather: nil,
+            path: .constant(NavigationPath())
+        )
+    }
+}

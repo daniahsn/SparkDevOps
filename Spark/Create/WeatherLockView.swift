@@ -167,3 +167,15 @@ struct WeatherIcon: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        WeatherLockView(
+            title: "Sample Title",
+            content: "Sample content for preview",
+            geofence: nil,
+            path: .constant(NavigationPath())
+        )
+        .environmentObject(WeatherService())
+    }
+}

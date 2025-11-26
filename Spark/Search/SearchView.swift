@@ -14,3 +14,7 @@ struct SearchView: View {
             .padding()
     }
 }
+
+#Preview {
+    SearchView()
+}

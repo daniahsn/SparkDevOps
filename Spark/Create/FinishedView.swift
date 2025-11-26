@@ -40,3 +40,7 @@ struct FinishedView: View {
         }
     }
 }
+
+#Preview {
+    FinishedView(path: .constant(NavigationPath()))
+}
