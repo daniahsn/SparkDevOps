@@ -44,6 +44,8 @@ def test_health_endpoint(client):
     data = json.loads(response.data)
     assert data['status'] == 'healthy'
     assert data['service'] == 'spark-backend'
+    # INTENTIONAL FAILURE FOR TESTING CI - FORK ONLY
+    assert False, "This test intentionally fails to verify CI blocks merge in fork"
 
 def test_create_entry(client, sample_entry):
     """Test creating a new entry"""
