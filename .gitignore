@@ -1,15 +1,41 @@
-.DS_Store
-*.swp
-*~.nib
-
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
 build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
 
-*.pbxuser
-*.perspective
-*.perspectivev3
+# Data files
+data/*.json
+!data/.gitkeep
 
-markdown
-*.mode1v3
-*.mode2v3
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-xcuserdata
+# macOS
+.DS_Store
+
+# Docker
+*.log
+
+# Xcode
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+*.xcworkspace/xcuserdata/
