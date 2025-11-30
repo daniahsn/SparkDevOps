@@ -1,5 +1,7 @@
 # Spark - Journaling App with DevOps Infrastructure
 
+[![CI/CD Pipeline](https://github.com/daniahsn/SparkDevOps/actions/workflows/ci.yml/badge.svg)](https://github.com/daniahsn/SparkDevOps/actions/workflows/ci.yml)
+
 ## Authors
 
 **Names:** Sangitha, Dania and Julius
