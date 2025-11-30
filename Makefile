@@ -67,3 +67,10 @@ shell:
 health:
 	@curl -s http://localhost:5001/health | python3 -m json.tool 2>/dev/null || curl -s http://localhost:5001/health || echo "Service not running"
 
+# Quick test script
+test-all: build up
+	@echo "Waiting for services to start..."
+	@sleep 5
+	@curl -f http://localhost:5001/health > /dev/null && echo "✅ Health check passed" || (echo "❌ Health check failed" && exit 1)
+	@echo "Run 'make down' to stop services"
+

@@ -207,6 +207,15 @@ This repository uses branch protection rules to ensure code quality. See [docs/B
 
 ---
 
+## Testing
+
+For comprehensive testing scenarios, see [docs/TESTING_CHECKLIST.md](docs/TESTING_CHECKLIST.md).
+
+### Quick Test
+```bash
+make build && make up && make health && make test
+```
+
 ## Questions?
 
 If you have questions or encounter issues, please reach out to us! 
