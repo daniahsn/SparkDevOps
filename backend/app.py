@@ -5,6 +5,8 @@ REST API for managing journal entries
 This API provides endpoints for creating, reading, updating, and deleting
 journal entries with conditional unlock features.
 """
+# INTENTIONAL LINTING ERROR FOR TESTING (FORK ONLY - DO NOT MERGE)
+import os, sys  # Bad: multiple imports on one line
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
