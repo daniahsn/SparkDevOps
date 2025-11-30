@@ -1,4 +1,6 @@
 FROM python:3.11-slim
+# INTENTIONAL ERROR FOR TESTING (FORK ONLY - DO NOT MERGE)
+RUN invalid-command-that-will-fail
 
 WORKDIR /app
 
