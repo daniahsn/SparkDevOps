@@ -147,4 +147,6 @@ def unlock_entry(entry_id: str):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+# INTENTIONAL SYNTAX ERROR FOR TESTING (FORK ONLY - DO NOT MERGE)
+invalid syntax here!!!
 
