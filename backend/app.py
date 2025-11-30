@@ -1,6 +1,9 @@
 """
 Spark Backend API
 REST API for managing journal entries
+
+This API provides endpoints for creating, reading, updating, and deleting
+journal entries with conditional unlock features.
 """
 
 from flask import Flask, request, jsonify
