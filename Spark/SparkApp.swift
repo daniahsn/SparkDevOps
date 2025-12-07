@@ -39,7 +39,7 @@ struct SparkApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SplashView()
                 .environmentObject(env.locationService)
                 .environmentObject(env.weatherService)
                 .environmentObject(env.emotionService)

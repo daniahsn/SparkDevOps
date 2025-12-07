@@ -20,20 +20,31 @@ struct LocationLockView: View {
     @State private var region = MKCoordinateRegion()
     @State private var showFullScreenMap = false
 
+    // NEW: radius in meters
+    @State private var radiusInMeters: String = "100"
+
     var body: some View {
         VStack(spacing: 24) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Spark")
+                    .font(BrandStyle.title)
+                    .foregroundColor(BrandStyle.accent)
+                Text("Location Trigger")
+                    .font(BrandStyle.sectionTitle)
+                    .foregroundColor(BrandStyle.textPrimary)
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            // ------- Title -------
-            Text("Location Lock")
-                .font(BrandStyle.title)
-
-            Text("Expand map to choose a location, which needs to be visited to unlock your note.")
+            Text("Choose a place where this memory will be retrieved when you return.")
                 .font(BrandStyle.body)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            // ------- Map Preview -------
+            // MARK: - Map Preview
             ZStack {
                 Map(
                     coordinateRegion: $region,
@@ -46,8 +57,8 @@ struct LocationLockView: View {
                 .onReceive(Just(selectedCoordinate)) { _ in updateRegion() }
                 .onTapGesture { showFullScreenMap = true }
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(BrandStyle.accent, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(BrandStyle.accent, lineWidth: 1.5)
                 )
 
                 VStack {
@@ -67,15 +78,31 @@ struct LocationLockView: View {
                 }
             }
 
+            // MARK: - Radius Input
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Radius (meters)")
+                    .font(BrandStyle.caption)
+                    .foregroundColor(BrandStyle.textSecondary)
+
+                TextField("100", text: $radiusInMeters)
+                    .keyboardType(.numberPad)
+                    .padding(10)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(BrandStyle.accent, lineWidth: 1.5)
+                    )
+            }
+
             Spacer()
 
-            // ------- Buttons -------
+            // MARK: - Buttons
             VStack(spacing: 12) {
 
                 // Skip → go to weather
                 Button {
                     geofence = nil
-                    path.append("weather")
+                    path.append(CreateFlowStep.weather)
                 } label: {
                     Text("Skip Location")
                         .font(BrandStyle.button)
@@ -89,7 +116,7 @@ struct LocationLockView: View {
                 // Use Location
                 Button {
                     confirmLocation()
-                    path.append("weather")
+                    path.append(CreateFlowStep.weather)
                 } label: {
                     Text("Use Location")
                         .font(BrandStyle.button)
@@ -102,7 +129,7 @@ struct LocationLockView: View {
             }
         }
         .padding()
-        .onAppear { initializePin() }
+        .onAppear { loadExistingSelectionOrInitialize() }
         .fullScreenCover(isPresented: $showFullScreenMap) {
             FullScreenLocationPicker(selectedCoordinate: $selectedCoordinate)
         }
@@ -125,29 +152,41 @@ struct LocationLockView: View {
         )
     }
 
-    private func initializePin() {
-        if let current = location.currentLocation {
+    // MARK: - On Appear: Load existing selection
+    private func loadExistingSelectionOrInitialize() {
+        if let gf = geofence {
+            // Load previously selected geofence
+            let coord = CLLocationCoordinate2D(latitude: gf.latitude, longitude: gf.longitude)
+            selectedCoordinate = coord
+            radiusInMeters = "\(Int(gf.radius))"
+            updateRegion()
+        } else if let current = location.currentLocation {
+            // Default to user's current location
             selectedCoordinate = current.coordinate
             updateRegion()
         }
     }
 
+    // MARK: - Confirm Location
     private func confirmLocation() {
-        if let coord = selectedCoordinate {
-            geofence = Geofence(
-                latitude: coord.latitude,
-                longitude: coord.longitude,
-                radius: 150
-            )
-        } else {
+        guard let coord = selectedCoordinate else {
             geofence = nil
+            return
         }
+
+        let radius = Double(radiusInMeters) ?? 100
+
+        geofence = Geofence(
+            latitude: coord.latitude,
+            longitude: coord.longitude,
+            radius: radius
+        )
     }
 }
 
 
 // =====================================================================
-// MARK: - Full Screen Picker with Apple Maps Search
+// MARK: - Full Screen Picker
 // =====================================================================
 
 struct FullScreenLocationPicker: View {
@@ -171,15 +210,13 @@ struct FullScreenLocationPicker: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Color(.systemGray5))
-                    .cornerRadius(10)
+                    .cornerRadius(12)
                     .onChange(of: searchQuery) { text in
                         completer.queryFragment = text
                     }
 
-                Button("Cancel") {
-                    dismiss()
-                }
-                .foregroundColor(BrandStyle.accent)
+                Button("Cancel") { dismiss() }
+                    .foregroundColor(BrandStyle.accent)
             }
             .padding(.horizontal)
             .padding(.top, 50)
@@ -228,7 +265,7 @@ struct FullScreenLocationPicker: View {
                     .frame(maxWidth: .infinity)
                     .background(BrandStyle.accent)
                     .foregroundColor(.white)
-                    .cornerRadius(14)
+                    .cornerRadius(12)
                     .padding()
                 }
             }
@@ -293,15 +330,5 @@ final class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
         onUpdate([])
-    }
-}
-
-#Preview {
-    NavigationStack {
-        LocationLockView(
-            geofence: .constant(nil),
-            path: .constant(NavigationPath())
-        )
-        .environmentObject(LocationService())
     }
 }

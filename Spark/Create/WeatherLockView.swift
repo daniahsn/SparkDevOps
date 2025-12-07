@@ -12,47 +12,67 @@ struct WeatherLockView: View {
 
     var body: some View {
         VStack(spacing: 24) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Spark")
+                    .font(BrandStyle.title)
+                    .foregroundColor(BrandStyle.accent)
+                Text("Weather Trigger")
+                    .font(BrandStyle.sectionTitle)
+                    .foregroundColor(BrandStyle.textPrimary)
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            // ------- Title -------
-            Text("Weather Lock")
-                .font(BrandStyle.title)
-
-            // ------- Explanatory -------
-            Text("Choose a weather condition that must match to unlock your note.")
+            // ------- Explanation -------
+            Text("Pick the weather that will bring back this memory when it returns.")
                 .font(BrandStyle.body)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            // ------- Weather List -------
-            ScrollView {
-                VStack(spacing: 0) {
+            // ------- Weather Matrix -------
+            VStack(spacing: 12) {
+                let columns = [
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10)
+                ]
+                
+                LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(weatherOptions, id: \.self) { w in
-
-                        WeatherRow(weather: w, isSelected: selectedWeather == w)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(selectedWeather == w ? BrandStyle.accent : .white)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedWeather = w
-                            }
-
-                        if w != weatherOptions.last {
-                            Rectangle()
-                                .fill(BrandStyle.accent.opacity(0.2))
-                                .frame(height: 1)
-                        }
+                        WeatherChip(
+                            weather: w,
+                            isSelected: selectedWeather == w,
+                            onTap: { selectedWeather = w }
+                        )
                     }
                 }
+                
+                // Clear Selection Button
+                Button { 
+                    selectedWeather = nil 
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "xmark.circle")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Clear Selection")
+                            .font(BrandStyle.caption)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(BrandStyle.accent, lineWidth: 1.5)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .foregroundColor(BrandStyle.accent)
+                }
+                .buttonStyle(.plain)
             }
-            .frame(maxHeight: 400)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(BrandStyle.accent, lineWidth: 1)
-            )
 
             Spacer()
 
@@ -62,7 +82,7 @@ struct WeatherLockView: View {
                 // Skip weather
                 Button {
                     weather = nil
-                    path.append("emotion")
+                    path.append(CreateFlowStep.emotion)
                 } label: {
                     Text("Skip Weather")
                         .font(BrandStyle.button)
@@ -76,56 +96,69 @@ struct WeatherLockView: View {
                 // Use weather
                 Button {
                     weather = selectedWeather
-                    path.append("emotion")
+                    path.append(CreateFlowStep.emotion)
                 } label: {
                     Text("Use Weather")
                         .font(BrandStyle.button)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(BrandStyle.accent)
+                        .background(selectedWeather != nil ? BrandStyle.accent : Color.gray)
                         .cornerRadius(12)
                 }
+                .disabled(selectedWeather == nil)
             }
         }
         .padding()
+        .onAppear {
+            // Sync previously chosen value from Binding
+            selectedWeather = weather
+        }
     }
 
     // MARK: - Weather Options
     private var weatherOptions: [Weather] {
         [
             .clear, .partlyCloudy, .cloudy, .foggy,
-            .drizzle, .rain, .snow, .snowGrains, .thunderstorm
+            .drizzle, .rain, .snow, .hail, .thunderstorm
         ]
     }
 }
 
 
-// MARK: - Weather Row View
+// MARK: - Weather Chip
 
-private struct WeatherRow: View {
+private struct WeatherChip: View {
     let weather: Weather
     let isSelected: Bool
-
+    let onTap: () -> Void
+    
     var body: some View {
-        HStack(spacing: 12) {
-
-            WeatherIcon(weather: weather)
-                .font(.system(size: 24))
-                .foregroundColor(isSelected ? .white : .black)
-
-            Text(weather.rawValue.capitalized)
-                .font(BrandStyle.body)
-                .foregroundColor(isSelected ? .white : .black)
-
-            Spacer()
-
-            if isSelected {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.white)
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                WeatherIcon(weather: weather)
+                    .font(.system(size: 20, weight: .medium))
+                Text(weather.displayName)
+                    .font(BrandStyle.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        isSelected ? BrandStyle.accent : BrandStyle.accent.opacity(0.3),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .foregroundColor(isSelected ? BrandStyle.accent : BrandStyle.textPrimary)
         }
-        .padding(.vertical, 6)
+        .buttonStyle(.plain)
     }
 }
 
@@ -149,7 +182,7 @@ struct WeatherIcon: View {
         case .rain: return "cloud.rain.fill"
         case .freezingRain: return "cloud.sleet.fill"
         case .snow: return "cloud.snow.fill"
-        case .snowGrains: return "snowflake"
+        case .hail: return "snowflake"
         case .thunderstorm: return "cloud.bolt.rain.fill"
         case .unknown: return "questionmark.circle"
         }
@@ -160,7 +193,7 @@ struct WeatherIcon: View {
     NavigationStack {
         WeatherLockView(
             geofence: .constant(nil),
-            weather: .constant(nil),
+            weather: .constant(.rain),
             path: .constant(NavigationPath())
         )
         .environmentObject(WeatherService())

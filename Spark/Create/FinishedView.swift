@@ -17,21 +17,24 @@ struct FinishedView: View {
                     .frame(width: 90)
                     .foregroundColor(.white)
 
-                Text("Entry successfully locked and saved!")
+                Text("Your memory has been preserved and is waiting for its moment!")
                     .font(BrandStyle.title)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
 
                 Button {
-                    // Reset the create flow
+                    // Reset the create flow state
                     NotificationCenter.default.post(name: .resetCreateFlow, object: nil)
-                    // Pop all the way back to CreateView root
+
+                    // Pop all the way back to CreateView
                     while path.count > 0 {
                         path.removeLast()
                     }
-                    // Switch to Home tab
+
+                    // Switch to Home tab after creating a note
                     NotificationCenter.default.post(name: .switchToHomeTab, object: nil)
+
                 } label: {
                     Text("Done")
                         .font(BrandStyle.button)

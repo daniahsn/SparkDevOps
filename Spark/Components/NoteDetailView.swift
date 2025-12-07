@@ -15,15 +15,43 @@ struct NoteDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // Header
+                // Header with back button and centered title
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(BrandStyle.accent)
+                    }
+                    
+                    Spacer()
+                    
+                    Text(entry.title)
+                        .font(BrandStyle.title)
+                        .foregroundColor(BrandStyle.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                    
+                    Spacer()
+                    
+                    // Invisible spacer to balance the back button
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.clear)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+                
+                // Status Card
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: entry.isLocked ? "lock.fill" : "lock.open.fill")
                             .font(.system(size: 20))
                             .foregroundColor(entry.isLocked ? .orange : .green)
                         
-                        Text(entry.isLocked ? "Locked" : "Unlocked")
-                            .font(BrandStyle.sectionTitle)
+                        Text(entry.isLocked ? "Waiting" : "Unlocked")
+                            .font(BrandStyle.caption)
                             .foregroundColor(entry.isLocked ? .orange : .green)
                         
                         Spacer()
@@ -32,25 +60,16 @@ struct NoteDetailView: View {
                     Text("Created: \(entry.creationDate, style: .date)")
                         .font(BrandStyle.caption)
                         .foregroundColor(BrandStyle.textSecondary)
-                    
-                    if let unlockedAt = entry.unlockedAt {
-                        Text("Unlocked: \(unlockedAt, style: .date)")
-                            .font(BrandStyle.caption)
-                            .foregroundColor(.green)
-                    } else {
-                        Text("Earliest unlock: \(entry.earliestUnlock, style: .date)")
-                            .font(BrandStyle.caption)
-                            .foregroundColor(BrandStyle.textSecondary)
-                    }
                 }
                 .padding()
-                .background(BrandStyle.card)
+                .background(Color.white)
                 .cornerRadius(12)
-                
-                // Title
-                Text(entry.title)
-                    .font(BrandStyle.title)
-                    .foregroundColor(BrandStyle.textPrimary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(BrandStyle.accent, lineWidth: 1.5)
+                )
+                .padding(.horizontal)
+                .padding(.top, 8)
                 
                 // Content (only show if unlocked)
                 if entry.isLocked {
@@ -59,32 +78,39 @@ struct NoteDetailView: View {
                             .font(.system(size: 40))
                             .foregroundColor(BrandStyle.accent.opacity(0.5))
                         
-                        Text("This note is locked")
+                        Text("This memory is waiting")
                             .font(BrandStyle.sectionTitle)
                             .foregroundColor(BrandStyle.textPrimary)
                         
-                        Text("Meet the unlock conditions to read the content")
+                        Text("Experience the moments you set to retrieve this memory")
                             .font(BrandStyle.body)
                             .foregroundColor(BrandStyle.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
-                    .background(BrandStyle.card)
+                    .background(Color.white)
                     .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(BrandStyle.accent, lineWidth: 1.5)
+                    )
+                    .padding(.horizontal)
                 } else {
                     Text(entry.content)
                         .font(BrandStyle.body)
                         .foregroundColor(BrandStyle.textPrimary)
                         .lineSpacing(4)
+                        .padding(.horizontal)
                 }
                 
                 // Lock Conditions Section
                 if hasAnyLockConditions {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Unlock Conditions")
+                        Text("Memory Triggers")
                             .font(BrandStyle.sectionTitle)
                             .foregroundColor(BrandStyle.textPrimary)
+                            .padding(.horizontal)
                         
                         // Location condition
                         if let geofence = entry.geofence {
@@ -94,10 +120,10 @@ struct NoteDetailView: View {
                                     .foregroundColor(BrandStyle.accent)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Location Required")
+                                    Text("When you are at this place again")
                                         .font(BrandStyle.body)
                                         .foregroundColor(BrandStyle.textPrimary)
-                                    Text("Within \(Int(geofence.radius))m")
+                                    Text("Within \(Int(geofence.radius))m of this location")
                                         .font(BrandStyle.caption)
                                         .foregroundColor(BrandStyle.textSecondary)
                                 }
@@ -105,8 +131,13 @@ struct NoteDetailView: View {
                                 Spacer()
                             }
                             .padding()
-                            .background(BrandStyle.card)
+                            .background(Color.white)
                             .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(BrandStyle.accent, lineWidth: 1.5)
+                            )
+                            .padding(.horizontal)
                         }
                         
                         // Weather condition
@@ -117,10 +148,10 @@ struct NoteDetailView: View {
                                     .foregroundColor(BrandStyle.accent)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Weather Required")
+                                    Text("When this weather returns")
                                         .font(BrandStyle.body)
                                         .foregroundColor(BrandStyle.textPrimary)
-                                    Text(weather.rawValue.capitalized)
+                                    Text(weather.displayName)
                                         .font(BrandStyle.caption)
                                         .foregroundColor(BrandStyle.textSecondary)
                                 }
@@ -128,8 +159,13 @@ struct NoteDetailView: View {
                                 Spacer()
                             }
                             .padding()
-                            .background(BrandStyle.card)
+                            .background(Color.white)
                             .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(BrandStyle.accent, lineWidth: 1.5)
+                            )
+                            .padding(.horizontal)
                         }
                         
                         // Emotion condition
@@ -140,7 +176,7 @@ struct NoteDetailView: View {
                                     .foregroundColor(BrandStyle.accent)
                                 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Emotion Required")
+                                    Text("When you feel this way again")
                                         .font(BrandStyle.body)
                                         .foregroundColor(BrandStyle.textPrimary)
                                     Text(emotion.rawValue.capitalized)
@@ -151,16 +187,20 @@ struct NoteDetailView: View {
                                 Spacer()
                             }
                             .padding()
-                            .background(BrandStyle.card)
+                            .background(Color.white)
                             .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(BrandStyle.accent, lineWidth: 1.5)
+                            )
+                            .padding(.horizontal)
                         }
                     }
                 }
             }
-            .padding()
+            .padding(.bottom)
         }
-        .navigationTitle("Note Details")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
     
     private var hasAnyLockConditions: Bool {
@@ -189,8 +229,8 @@ struct NoteDetailView: View {
     NavigationStack {
         NoteDetailView(
             entry: SparkEntry(
-                title: "My First Note",
-                content: "This is a detailed view of a note. It shows all the information about the entry including its lock conditions and status.",
+                title: "My First Memory",
+                content: "This is a detailed view of a memory. It shows all the information about the memory including its lock conditions and status.",
                 geofence: Geofence(latitude: 37.7749, longitude: -122.4194, radius: 150),
                 weather: .rain,
                 emotion: .happy

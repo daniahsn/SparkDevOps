@@ -21,9 +21,20 @@ enum Weather: String, Codable, Hashable {
     case rain
     case freezingRain
     case snow
-    case snowGrains
+    case hail
     case thunderstorm
     case unknown
+    
+    var displayName: String {
+        switch self {
+        case .partlyCloudy:
+            return "Partly Cloudy"
+        case .freezingRain:
+            return "Freezing Rain"
+        default:
+            return rawValue.capitalized
+        }
+    }
 }
 
 // MARK: - Weather Service
@@ -44,7 +55,7 @@ final class WeatherService: ObservableObject {
         case 61, 63, 65: return .rain
         case 66, 67: return .freezingRain
         case 71, 73, 75: return .snow
-        case 77: return .snowGrains
+        case 77: return .hail
         case 80, 81, 82: return .rain
         case 85, 86: return .snow
         case 95, 96, 99: return .thunderstorm

@@ -1,6 +1,14 @@
 import SwiftUI
 import CoreLocation
 
+// MARK: - Navigation Enum
+enum CreateFlowStep: Hashable {
+    case location
+    case weather
+    case emotion
+    case finish
+}
+
 struct CreateView: View {
     @EnvironmentObject var location: LocationService
     @EnvironmentObject var weather: WeatherService
@@ -10,7 +18,8 @@ struct CreateView: View {
     @State private var path = NavigationPath()
     @State private var title: String = ""
     @State private var content: String = ""
-    // Central unlock condition state
+
+    // Unlock conditions shared across screens
     @State private var geofence: Geofence? = nil
     @State private var weatherCondition: Weather? = nil
     @State private var emotionCondition: Emotion? = nil
@@ -18,6 +27,18 @@ struct CreateView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 16) {
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Spark")
+                        .font(BrandStyle.title)
+                        .foregroundColor(BrandStyle.accent)
+                    Text("Create Memory")
+                        .font(BrandStyle.sectionTitle)
+                        .foregroundColor(BrandStyle.textPrimary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 // --- Title Field ---
                 VStack(alignment: .leading, spacing: 4) {
@@ -25,32 +46,36 @@ struct CreateView: View {
                         .font(BrandStyle.caption)
                         .foregroundColor(BrandStyle.textSecondary)
 
-                    TextField("New Entry Title", text: $title)
+                    TextField("New Memory Title", text: $title)
                         .padding(12)
+                        .background(Color.white)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(BrandStyle.accent, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(BrandStyle.accent, lineWidth: 1.5)
                         )
                 }
+                .padding(.horizontal)
 
                 // --- Content Field ---
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Content")
+                    Text("Your Memory")
                         .font(BrandStyle.caption)
                         .foregroundColor(BrandStyle.textSecondary)
 
                     TextEditor(text: $content)
                         .padding(12)
+                        .background(Color.white)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(BrandStyle.accent, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(BrandStyle.accent, lineWidth: 1.5)
                         )
                         .frame(maxHeight: .infinity)
                 }
+                .padding(.horizontal)
 
                 // --- Next Button ---
                 Button {
-                    path.append("location")
+                    path.append(CreateFlowStep.location)
                 } label: {
                     Text("Next")
                         .font(BrandStyle.button)
@@ -60,53 +85,51 @@ struct CreateView: View {
                         .background(BrandStyle.accent)
                         .cornerRadius(12)
                 }
+                .padding(.horizontal)
             }
-            .padding()
-            .navigationTitle("Create Entry")
-            .navigationDestination(for: String.self) { screen in
-                switch screen {
-                case "location":
+            .navigationDestination(for: CreateFlowStep.self) { step in
+                switch step {
+
+                case .location:
                     LocationLockView(
                         geofence: $geofence,
                         path: $path
                     )
 
-                case "weather":
+                case .weather:
                     WeatherLockView(
                         geofence: $geofence,
                         weather: $weatherCondition,
                         path: $path
                     )
 
-                case "emotion":
+                case .emotion:
                     EmotionLockView(
+                        title: title,
+                        content: content,
+                        geofence: $geofence,
+                        weather: $weatherCondition,
                         emotion: $emotionCondition,
                         path: $path
                     )
 
-                case "unlock":
-                    EarliestUnlockView(
-                        title: title,
-                        content: content,
-                        geofence: geofence,
-                        weather: weatherCondition,
-                        emotion: emotionCondition,
-                        path: $path
-                    )
-
-                case "finish":
+                case .finish:
                     FinishedView(path: $path)
-
-                default:
-                    EmptyView()
                 }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .resetCreateFlow)) { _ in
-            title = ""
-            content = ""
-            path = NavigationPath()     // ← Return completely to beginning
+            resetFlow()
         }
+    }
+
+    private func resetFlow() {
+        title = ""
+        content = ""
+        geofence = nil
+        weatherCondition = nil
+        emotionCondition = nil
+        path = NavigationPath()
     }
 }
 
