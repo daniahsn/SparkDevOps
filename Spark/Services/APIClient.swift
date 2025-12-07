@@ -43,11 +43,42 @@ class APIClient {
             throw APIError.invalidURL
         }
         
-        let (data, _) = try await URLSession.shared.data(from: url)
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.serverError
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            if let errorString = String(data: data, encoding: .utf8) {
+                print("❌ API Error \(httpResponse.statusCode): \(errorString)")
+            }
+            throw APIError.serverError
+        }
+        
+        // Check if response is empty
+        guard !data.isEmpty else {
+            print("❌ Empty response from API")
+            throw APIError.decodingError
+        }
+        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let entries = try decoder.decode([SparkEntry].self, from: data)
-        return entries
+        
+        do {
+            let entries = try decoder.decode([SparkEntry].self, from: data)
+            return entries
+        } catch {
+            // Log the actual decoding error and response
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("❌ Decoding error. Response: \(responseString.prefix(500))")
+            }
+            print("❌ Decoding error: \(error.localizedDescription)")
+            if let decodingError = error as? DecodingError {
+                print("❌ Decoding error details: \(decodingError)")
+            }
+            throw APIError.decodingError
+        }
     }
     
     func fetchEntry(id: UUID) async throws -> SparkEntry {
@@ -95,11 +126,43 @@ class APIClient {
         encoder.dateEncodingStrategy = .iso8601
         request.httpBody = try encoder.encode(entry)
         
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.serverError
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            // Log the error response for debugging
+            if let errorString = String(data: data, encoding: .utf8) {
+                print("❌ API Error \(httpResponse.statusCode): \(errorString)")
+            }
+            if httpResponse.statusCode == 404 {
+                throw APIError.decodingError  // Entry not found
+            }
+            throw APIError.serverError
+        }
+        
+        // Check if response is empty
+        guard !data.isEmpty else {
+            print("❌ Empty response from API")
+            throw APIError.decodingError
+        }
+        
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let updatedEntry = try decoder.decode(SparkEntry.self, from: data)
-        return updatedEntry
+        
+        do {
+            let updatedEntry = try decoder.decode(SparkEntry.self, from: data)
+            return updatedEntry
+        } catch {
+            // Log the actual decoding error and response
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("❌ Decoding error. Response: \(responseString)")
+            }
+            print("❌ Decoding error: \(error.localizedDescription)")
+            throw APIError.decodingError
+        }
     }
     
     func deleteEntry(id: UUID) async throws {

@@ -74,7 +74,7 @@ final class StorageService: ObservableObject {
 
     func load() {
         if useAPI {
-            Task {
+            Task { @MainActor in
                 await loadFromAPI()
             }
         } else {
@@ -300,16 +300,21 @@ final class StorageService: ObservableObject {
     @MainActor
     private func updateInAPI(_ entry: SparkEntry) async {
         do {
+            print("🔄 Updating entry via API: \(entry.title) (ID: \(entry.id.uuidString))")
             let updatedEntry = try await apiClient.updateEntry(entry)
             if let i = entries.firstIndex(where: { $0.id == entry.id }) {
                 entries[i] = updatedEntry
+                print("✅ Updated entry via API: \(updatedEntry.title)")
+            } else {
+                print("⚠️ Entry not found in local array after API update")
             }
-            print("✅ Updated entry via API: \(updatedEntry.title)")
         } catch {
             print("❌ Failed to update entry via API: \(error.localizedDescription)")
+            print("   Entry ID: \(entry.id.uuidString)")
+            print("   Entry title: \(entry.title)")
             // Fallback to local
-        if let i = entries.firstIndex(where: { $0.id == entry.id }) {
-            entries[i] = entry
+            if let i = entries.firstIndex(where: { $0.id == entry.id }) {
+                entries[i] = entry
                 save()
             }
         }

@@ -11,10 +11,31 @@ import Combine
 
 
 struct Geofence: Codable, Hashable {
-    var id: UUID = UUID()
+    var id: UUID
     let latitude: Double
     let longitude: Double
     let radius: Double
+    
+    init(id: UUID = UUID(), latitude: Double, longitude: Double, radius: Double) {
+        self.id = id
+        self.latitude = latitude
+        self.longitude = longitude
+        self.radius = radius
+    }
+    
+    // Custom decoder to handle missing id field from API
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        // id is optional in JSON, use default if missing
+        id = (try? container.decode(UUID.self, forKey: .id)) ?? UUID()
+        latitude = try container.decode(Double.self, forKey: .latitude)
+        longitude = try container.decode(Double.self, forKey: .longitude)
+        radius = try container.decode(Double.self, forKey: .radius)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, latitude, longitude, radius
+    }
 }
 
 final class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
