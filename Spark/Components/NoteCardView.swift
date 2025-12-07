@@ -19,33 +19,34 @@ struct NoteCardView: View {
             }
         }) {
             VStack(alignment: .leading, spacing: 16) {
+
                 // Header with lock status
                 HStack(alignment: .center) {
+
                     // Lock status badge
                     HStack(spacing: 6) {
                         Image(systemName: entry.isLocked ? "lock.fill" : "lock.open.fill")
                             .font(.system(size: 14, weight: .semibold))
-                        Text(entry.isLocked ? "Locked" : "Unlocked")
+                        Text(entry.isLocked ? "Waiting" : "Unlocked")
                             .font(BrandStyle.caption)
                             .fontWeight(.medium)
                     }
-                    .foregroundColor(entry.isLocked ? BrandStyle.accent : BrandStyle.secondary)
+                    .foregroundColor(BrandStyle.accent)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(
-                        (entry.isLocked ? BrandStyle.accent : BrandStyle.secondary)
-                            .opacity(0.15)
+                        BrandStyle.accent.opacity(0.15)
                     )
                     .cornerRadius(8)
                     
                     Spacer()
                     
-                    // Date
+                    // Date created
                     Text(entry.creationDate, style: .date)
                         .font(BrandStyle.caption)
                         .foregroundColor(BrandStyle.textSecondary)
                 }
-                
+
                 // Title
                 Text(entry.title)
                     .font(BrandStyle.sectionTitle)
@@ -55,7 +56,7 @@ struct NoteCardView: View {
                 
                 // Content preview (only show if unlocked)
                 if entry.isLocked {
-                    Text("This note is locked. Meet the unlock conditions to read it.")
+                    Text("This memory awaits its moment. Experience the triggers you set to retrieve it.")
                         .font(BrandStyle.body)
                         .foregroundColor(BrandStyle.textSecondary.opacity(0.7))
                         .italic()
@@ -73,46 +74,41 @@ struct NoteCardView: View {
                 if entry.geofence != nil || entry.weather != nil || entry.emotion != nil {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
+
                             if entry.geofence != nil {
                                 ConditionBadge(
                                     icon: "mappin.circle.fill",
                                     text: "Location",
-                                    color: BrandStyle.secondary
+                                    color: BrandStyle.accent
                                 )
                             }
                             
-                            if entry.weather != nil {
+                            if let w = entry.weather {
                                 ConditionBadge(
-                                    icon: weatherIconName(entry.weather!),
-                                    text: entry.weather!.rawValue.capitalized,
-                                    color: BrandStyle.secondary
+                                    icon: weatherIconName(w),
+                                    text: w.displayName,
+                                    color: BrandStyle.accent
                                 )
                             }
                             
-                            if entry.emotion != nil {
+                            if let emo = entry.emotion {
                                 ConditionBadge(
-                                    icon: emotionIcon(entry.emotion!),
-                                    text: entry.emotion!.rawValue.capitalized,
-                                    color: BrandStyle.secondary
+                                    icon: emotionIcon(emo),
+                                    text: emo.rawValue.capitalized,
+                                    color: BrandStyle.accent
                                 )
                             }
                         }
                     }
                 }
-                
-                // Unlock date info
-                HStack(spacing: 6) {
-                    if entry.isLocked {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                            .foregroundColor(BrandStyle.accent)
-                        Text("Unlocks: \(entry.earliestUnlock, style: .date)")
-                            .font(BrandStyle.caption)
-                            .foregroundColor(BrandStyle.textSecondary)
-                    } else if let unlockedAt = entry.unlockedAt {
+
+                // Unlock info (only if unlocked)
+                if let unlockedAt = entry.unlockedAt {
+                    HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 12))
-                            .foregroundColor(BrandStyle.secondary)
+                            .foregroundColor(BrandStyle.accent)
+
                         Text("Unlocked: \(unlockedAt, style: .relative)")
                             .font(BrandStyle.caption)
                             .foregroundColor(BrandStyle.textSecondary)
@@ -121,17 +117,12 @@ struct NoteCardView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(BrandStyle.card)
+            .background(Color.white)
             .cornerRadius(16)
             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        entry.isLocked 
-                            ? BrandStyle.accent.opacity(0.2) 
-                            : BrandStyle.secondary.opacity(0.2),
-                        lineWidth: 1.5
-                    )
+                    .stroke(BrandStyle.accent, lineWidth: 1.5)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -147,7 +138,7 @@ struct NoteCardView: View {
         case .rain: return "cloud.rain.fill"
         case .freezingRain: return "cloud.sleet.fill"
         case .snow: return "cloud.snow.fill"
-        case .snowGrains: return "snowflake"
+        case .hail: return "snowflake"
         case .thunderstorm: return "cloud.bolt.rain.fill"
         case .unknown: return "questionmark.circle"
         }
@@ -188,8 +179,12 @@ struct ConditionBadge: View {
         .foregroundColor(color)
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(color.opacity(0.12))
+        .background(color.opacity(0.15))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(color.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -197,8 +192,8 @@ struct ConditionBadge: View {
     VStack(spacing: 16) {
         NoteCardView(
             entry: SparkEntry(
-                title: "My First Note",
-                content: "This is a sample note with some content that might be longer than expected.",
+                title: "My First Memory",
+                content: "This is a sample memory with some content that might be longer than expected.",
                 geofence: Geofence(latitude: 37.7749, longitude: -122.4194, radius: 150),
                 weather: .rain,
                 emotion: .happy
@@ -208,8 +203,8 @@ struct ConditionBadge: View {
         
         NoteCardView(
             entry: SparkEntry(
-                title: "Unlocked Note",
-                content: "This note has been unlocked and can be read.",
+                title: "Retrieved Memory",
+                content: "This memory has been unlocked and can be read.",
                 unlockedAt: Date()
             ),
             onTap: {}
@@ -218,4 +213,3 @@ struct ConditionBadge: View {
     .padding()
     .background(BrandStyle.background)
 }
-

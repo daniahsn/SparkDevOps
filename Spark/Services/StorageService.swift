@@ -60,6 +60,10 @@ final class StorageService: ObservableObject {
 
     @Published var entries: [SparkEntry] = []
 
+    // Toggle to use API or local storage
+    private let useAPI = true  // Set to false to use local storage
+    private let apiClient = APIClient.shared
+
     private init() {}
 
     private var fileURL: URL {
@@ -69,6 +73,28 @@ final class StorageService: ObservableObject {
     }
 
     func load() {
+        if useAPI {
+            Task {
+                await loadFromAPI()
+            }
+        } else {
+            loadFromLocal()
+        }
+    }
+    
+    @MainActor
+    private func loadFromAPI() async {
+        do {
+            entries = try await apiClient.fetchEntries()
+            print("📂 Loaded \(entries.count) entries from API")
+        } catch {
+            print("⚠️ Failed to load from API: \(error.localizedDescription)")
+            print("📂 Falling back to local storage")
+            loadFromLocal()
+        }
+    }
+    
+    private func loadFromLocal() {
         // Check if file exists
         let fileExists = FileManager.default.fileExists(atPath: fileURL.path)
         
@@ -215,6 +241,11 @@ final class StorageService: ObservableObject {
     }
 
     func save() {
+        if useAPI {
+            // API saves are handled individually in add/update/delete
+            return
+        }
+        
         print("💾 Saving \(entries.count) entries to disk")
         for (index, entry) in entries.enumerated() {
             print("  Entry \(index): title=\(entry.title), emotion=\(entry.emotion?.rawValue ?? "nil"), weather=\(entry.weather?.rawValue ?? "nil"), geofence=\(entry.geofence != nil ? "yes" : "no")")
@@ -229,19 +260,90 @@ final class StorageService: ObservableObject {
     }
 
     func add(_ entry: SparkEntry) {
+        if useAPI {
+            Task {
+                await addToAPI(entry)
+            }
+        } else {
         entries.append(entry)
         save()
+        }
+    }
+    
+    @MainActor
+    private func addToAPI(_ entry: SparkEntry) async {
+        do {
+            let createdEntry = try await apiClient.createEntry(entry)
+            entries.append(createdEntry)
+            print("✅ Created entry via API: \(createdEntry.title)")
+        } catch {
+            print("❌ Failed to create entry via API: \(error.localizedDescription)")
+            // Fallback to local
+            entries.append(entry)
+            save()
+        }
     }
 
     func update(_ entry: SparkEntry) {
+        if useAPI {
+            Task {
+                await updateInAPI(entry)
+            }
+        } else {
+            if let i = entries.firstIndex(where: { $0.id == entry.id }) {
+                entries[i] = entry
+                save()
+            }
+        }
+    }
+    
+    @MainActor
+    private func updateInAPI(_ entry: SparkEntry) async {
+        do {
+            let updatedEntry = try await apiClient.updateEntry(entry)
+            if let i = entries.firstIndex(where: { $0.id == entry.id }) {
+                entries[i] = updatedEntry
+            }
+            print("✅ Updated entry via API: \(updatedEntry.title)")
+        } catch {
+            print("❌ Failed to update entry via API: \(error.localizedDescription)")
+            // Fallback to local
         if let i = entries.firstIndex(where: { $0.id == entry.id }) {
             entries[i] = entry
+                save()
+            }
+        }
+    }
+    
+    func delete(_ entry: SparkEntry) {
+        if useAPI {
+            Task {
+                await deleteFromAPI(entry)
+            }
+        } else {
+            entries.removeAll { $0.id == entry.id }
+            save()
+        }
+    }
+    
+    @MainActor
+    private func deleteFromAPI(_ entry: SparkEntry) async {
+        do {
+            try await apiClient.deleteEntry(id: entry.id)
+            entries.removeAll { $0.id == entry.id }
+            print("✅ Deleted entry via API: \(entry.title)")
+        } catch {
+            print("❌ Failed to delete entry via API: \(error.localizedDescription)")
+            // Fallback to local
+            entries.removeAll { $0.id == entry.id }
             save()
         }
     }
     
     func clearAll() {
         entries = []
+        if !useAPI {
         save()
+        }
     }
 }

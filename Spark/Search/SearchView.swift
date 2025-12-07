@@ -9,14 +9,14 @@ import SwiftUI
 
 enum FilterOption: String, CaseIterable {
     case all = "All"
-    case locked = "Locked"
-    case unlocked = "Unlocked"
+    case locked = "Waiting"
+    case unlocked = "Retrieved"
 }
 
 enum SortOption: String, CaseIterable {
     case newest = "Newest First"
     case oldest = "Oldest First"
-    case recentlyUnlocked = "Recently Unlocked"
+    case recentlyUnlocked = "Recently Retrieved"
 }
 
 struct SearchView: View {
@@ -33,10 +33,23 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Debug: Show entry count and clear button (for testing)
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Spark")
+                        .font(BrandStyle.title)
+                        .foregroundColor(BrandStyle.accent)
+                    Text("Search Memories")
+                        .font(BrandStyle.sectionTitle)
+                        .foregroundColor(BrandStyle.textPrimary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Debug: Show memory count and clear button (for testing)
                 #if DEBUG
                 HStack {
-                    Text("Entries: \(storage.entries.count)")
+                    Text("Memories: \(storage.entries.count)")
                         .font(BrandStyle.caption)
                         .foregroundColor(BrandStyle.textSecondary)
                     
@@ -70,7 +83,7 @@ struct SearchView: View {
                         .foregroundColor(BrandStyle.secondary)
                         .font(.system(size: 16, weight: .medium))
                     
-                    TextField("Search notes...", text: $searchText)
+                    TextField("Search your memories...", text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
                         .font(BrandStyle.body)
                     
@@ -86,12 +99,12 @@ struct SearchView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(BrandStyle.card)
-                .cornerRadius(14)
+                .background(Color.white)
+                .cornerRadius(12)
                 .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(BrandStyle.secondary.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(BrandStyle.accent, lineWidth: 1.5)
                 )
                 .padding(.horizontal)
                 .padding(.top)
@@ -133,7 +146,7 @@ struct SearchView: View {
                                     selectedWeather = nil
                                 }
                                 ForEach([Weather.clear, .partlyCloudy, .cloudy, .foggy, .drizzle, .rain, .snow, .thunderstorm], id: \.self) { weather in
-                                    Button(weather.rawValue.capitalized) {
+                                    Button(weather.displayName) {
                                         selectedWeather = weather
                                     }
                                 }
@@ -177,7 +190,7 @@ struct SearchView: View {
                         
                         if selectedWeather != nil {
                             FilterChip(
-                                text: selectedWeather!.rawValue.capitalized,
+                                text: selectedWeather!.displayName,
                                 onRemove: { selectedWeather = nil }
                             )
                         }
@@ -193,7 +206,7 @@ struct SearchView: View {
                             .font(.system(size: 56, weight: .light))
                             .foregroundColor(BrandStyle.secondary.opacity(0.4))
                         
-                        Text("No notes found")
+                        Text("No memories found")
                             .font(BrandStyle.sectionTitle)
                             .foregroundColor(BrandStyle.textPrimary)
                         
@@ -204,7 +217,7 @@ struct SearchView: View {
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
                         } else {
-                            Text("Create your first note to get started")
+                            Text("Create your first memory to begin your journey")
                                 .font(BrandStyle.body)
                                 .foregroundColor(BrandStyle.textSecondary)
                                 .multilineTextAlignment(.center)
@@ -230,11 +243,6 @@ struct SearchView: View {
                     }
                 }
             }
-            .navigationTitle("Search")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbarBackground(BrandStyle.background, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
             .navigationDestination(item: $selectedEntry) { entry in
                 NoteDetailView(entry: entry)
             }
@@ -331,14 +339,14 @@ struct FilterChip: View {
                     .font(.system(size: 14))
             }
         }
-        .foregroundColor(BrandStyle.secondary)
+        .foregroundColor(BrandStyle.accent)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
-        .background(BrandStyle.secondary.opacity(0.15))
-        .cornerRadius(10)
+        .background(Color.white)
+        .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(BrandStyle.secondary.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(BrandStyle.accent, lineWidth: 1.5)
         )
     }
 }

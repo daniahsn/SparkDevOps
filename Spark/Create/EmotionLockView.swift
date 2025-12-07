@@ -1,7 +1,15 @@
 import SwiftUI
 
 struct EmotionLockView: View {
-    // Bind back to CreateView state
+    @EnvironmentObject var storage: StorageService
+
+    // Data passed from CreateView
+    let title: String
+    let content: String
+    @Binding var geofence: Geofence?
+    @Binding var weather: Weather?
+
+    // Bind back to CreateView
     @Binding var emotion: Emotion?
     @Binding var path: NavigationPath
 
@@ -9,47 +17,67 @@ struct EmotionLockView: View {
 
     var body: some View {
         VStack(spacing: 24) {
-
-            // ------- Title -------
-            Text("Emotion Lock")
-                .font(BrandStyle.title)
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Spark")
+                    .font(BrandStyle.title)
+                    .foregroundColor(BrandStyle.accent)
+                Text("Emotion Trigger")
+                    .font(BrandStyle.sectionTitle)
+                    .foregroundColor(BrandStyle.textPrimary)
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // ------- Explanation -------
-            Text("Choose an emotion that must match to unlock your note.")
+            Text("Select the feeling that will unlock this memory when you experience it again.")
                 .font(BrandStyle.body)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            // ------- Emotion List -------
-            ScrollView {
-                VStack(spacing: 0) {
+            // ------- Emotion Matrix -------
+            VStack(spacing: 12) {
+                let columns = [
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10),
+                    GridItem(.flexible(), spacing: 10)
+                ]
+                
+                LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(Emotion.allCases, id: \.self) { emo in
-
-                        EmotionRow(emotion: emo, isSelected: selectedEmotion == emo)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(selectedEmotion == emo ? BrandStyle.accent : .white)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedEmotion = emo
-                            }
-
-                        if emo != Emotion.allCases.last {
-                            Rectangle()
-                                .fill(BrandStyle.accent.opacity(0.2))
-                                .frame(height: 1)
-                        }
+                        EmotionChip(
+                            emotion: emo,
+                            isSelected: selectedEmotion == emo,
+                            onTap: { selectedEmotion = emo }
+                        )
                     }
                 }
+                
+                // Clear Selection Button
+                Button { 
+                    selectedEmotion = nil 
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "xmark.circle")
+                            .font(.system(size: 16, weight: .medium))
+                        Text("Clear Selection")
+                            .font(BrandStyle.caption)
+                            .fontWeight(.medium)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(BrandStyle.accent, lineWidth: 1.5)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .foregroundColor(BrandStyle.accent)
+                }
+                .buttonStyle(.plain)
             }
-            .frame(maxHeight: 400)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(BrandStyle.accent, lineWidth: 1)
-            )
 
             Spacer()
 
@@ -58,7 +86,8 @@ struct EmotionLockView: View {
                 // Skip
                 Button {
                     emotion = nil
-                    path.append("unlock")
+                    saveEntryHere()
+                    path.append(CreateFlowStep.finish)
                 } label: {
                     Text("Skip Emotion")
                         .font(BrandStyle.button)
@@ -69,12 +98,12 @@ struct EmotionLockView: View {
                         .cornerRadius(12)
                 }
 
-                // Use
+                // Use Emotion
                 Button {
-                    if selectedEmotion != nil {
-                        print("🎭 EmotionLockView: Selected emotion = \(selectedEmotion!.rawValue)")
-                        emotion = selectedEmotion
-                        path.append("unlock")
+                    if let emo = selectedEmotion {
+                        emotion = emo
+                        saveEntryHere()
+                        path.append(CreateFlowStep.finish)
                     }
                 } label: {
                     Text("Use Emotion")
@@ -89,35 +118,63 @@ struct EmotionLockView: View {
             }
         }
         .padding()
+        .onAppear {
+            // Re-sync if user returns back
+            selectedEmotion = emotion
+        }
+    }
+
+    // MARK: - Save Entry Right Here (Option B)
+    private func saveEntryHere() {
+        let entry = SparkEntry(
+            title: title,
+            content: content,
+            geofence: geofence,
+            weather: weather,
+            emotion: selectedEmotion,  // nil if skipped
+            creationDate: Date(),
+            unlockedAt: nil
+        )
+
+        storage.add(entry)
     }
 }
 
-// MARK: - Row
-private struct EmotionRow: View {
+
+// MARK: - Emotion Chip
+private struct EmotionChip: View {
     let emotion: Emotion
     let isSelected: Bool
-
+    let onTap: () -> Void
+    
     var body: some View {
-        HStack(spacing: 12) {
-
-            Image(systemName: iconName)
-                .font(.system(size: 24))
-                .foregroundColor(isSelected ? .white : .black)
-
-            Text(emotion.rawValue.capitalized)
-                .font(BrandStyle.body)
-                .foregroundColor(isSelected ? .white : .black)
-
-            Spacer()
-
-            if isSelected {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.white)
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                Image(systemName: iconName)
+                    .font(.system(size: 20, weight: .medium))
+                Text(emotion.rawValue.capitalized)
+                    .font(BrandStyle.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 8)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        isSelected ? BrandStyle.accent : BrandStyle.accent.opacity(0.3),
+                        lineWidth: isSelected ? 2 : 1
+                    )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .foregroundColor(isSelected ? BrandStyle.accent : BrandStyle.textPrimary)
         }
-        .padding(.vertical, 6)
+        .buttonStyle(.plain)
     }
-
+    
     private var iconName: String {
         switch emotion {
         case .happy: return "face.smiling"
@@ -136,11 +193,3 @@ private struct EmotionRow: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        EmotionLockView(
-            emotion: .constant(nil),
-            path: .constant(NavigationPath())
-        )
-    }
-}

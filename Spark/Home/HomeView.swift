@@ -62,7 +62,7 @@ struct HomeView: View {
                     VStack(spacing: 12) {
                         StatusCard(
                             title: "Weather",
-                            subtitle: currentWeather?.rawValue.capitalized ?? "-",
+                            subtitle: currentWeather?.displayName ?? "-",
                             symbol: WeatherSymbol.symbol(for: currentWeather ?? .unknown)
                         )
                         StatusCard(
@@ -242,13 +242,13 @@ struct HomeView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(BrandStyle.secondary.opacity(0.15))
+                    .background(Color.white)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(BrandStyle.secondary.opacity(0.3), lineWidth: 1)
+                            .stroke(BrandStyle.accent, lineWidth: 1)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .foregroundColor(BrandStyle.secondary)
+                    .foregroundColor(BrandStyle.accent)
                 }
                 .buttonStyle(.plain)
             }
@@ -274,28 +274,16 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 8)
-                .background(
-                    isSelected
-                        ? LinearGradient(
-                            colors: [BrandStyle.accent, BrandStyle.accent.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        : LinearGradient(
-                            colors: [BrandStyle.accent.opacity(0.12), BrandStyle.accent.opacity(0.08)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                )
+                .background(Color.white)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isSelected ? BrandStyle.accent.opacity(0.3) : BrandStyle.accent.opacity(0.2),
-                            lineWidth: isSelected ? 1.5 : 1
+                            isSelected ? BrandStyle.accent : BrandStyle.accent.opacity(0.3),
+                            lineWidth: isSelected ? 2 : 1
                         )
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .foregroundColor(isSelected ? .white : BrandStyle.textPrimary)
+                .foregroundColor(isSelected ? BrandStyle.accent : BrandStyle.textPrimary)
                 .shadow(
                     color: isSelected ? BrandStyle.accent.opacity(0.3) : Color.clear,
                     radius: isSelected ? 4 : 0,
@@ -341,7 +329,7 @@ struct HomeView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -355,12 +343,12 @@ struct HomeView: View {
                 Spacer()
             }
             .padding(16)
-            .background(BrandStyle.card)
+            .background(Color.white)
             .cornerRadius(16)
             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(BrandStyle.accent.opacity(0.2), lineWidth: 1.5)
+                    .stroke(BrandStyle.accent, lineWidth: 1.5)
             )
         }
     }
@@ -404,13 +392,13 @@ struct HomeView: View {
             VStack(spacing: 20) {
                 Image(systemName: "lock.open")
                     .font(.system(size: 56, weight: .light))
-                    .foregroundColor(BrandStyle.secondary.opacity(0.4))
+                    .foregroundColor(BrandStyle.accent.opacity(0.4))
                 
-                Text("No unlocked entries yet")
+                Text("No unlocked memories yet")
                     .font(BrandStyle.sectionTitle)
                     .foregroundColor(BrandStyle.textPrimary)
                 
-                Text("Create notes and unlock them by meeting their conditions")
+                Text("Preserve your moments and they'll return when the right conditions align")
                     .font(BrandStyle.body)
                     .foregroundColor(BrandStyle.textSecondary)
                     .multilineTextAlignment(.center)
@@ -418,9 +406,13 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 60)
-            .background(BrandStyle.card)
+            .background(Color.white)
             .cornerRadius(16)
             .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(BrandStyle.accent, lineWidth: 1.5)
+            )
         }
     }
     
@@ -448,7 +440,7 @@ struct HomeView: View {
             case .rain: return "cloud.rain.fill"
             case .freezingRain: return "cloud.sleet.fill"
             case .snow: return "cloud.snow.fill"
-            case .snowGrains: return "snowflake"
+            case .hail: return "snowflake"
             case .thunderstorm: return "cloud.bolt.rain.fill"
             case .unknown: return "questionmark.circle"
             }

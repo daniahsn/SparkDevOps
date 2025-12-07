@@ -1,10 +1,3 @@
-//
-//  UnlockService.swift
-//  Spark
-//
-//  Created by Julius  Jung on 20.11.2025.
-//
-
 import Foundation
 import CoreLocation
 
@@ -17,6 +10,7 @@ final class UnlockService {
     init(location: LocationService,
          weather: WeatherService,
          emotion: EmotionService) {
+
         self.location = location
         self.weather = weather
         self.emotion = emotion
@@ -24,40 +18,50 @@ final class UnlockService {
 
     func shouldUnlock(_ entry: SparkEntry) -> Bool {
 
+        // Already unlocked → do nothing
         if entry.unlockedAt != nil { return false }
 
-        // Check if time requirement has passed
-        guard Date() >= entry.earliestUnlock else {
-            return false
-        }
-
         // Check if there are any conditions set
-        let hasConditions = entry.geofence != nil || entry.weather != nil || entry.emotion != nil
-        
-        // If no conditions are set and time has passed, unlock immediately
+        let hasConditions = entry.geofence != nil ||
+                            entry.weather != nil ||
+                            entry.emotion != nil
+
+        // If no conditions → unlock immediately
         if !hasConditions {
             return true
         }
 
-        // geofence
+        // ----------------------------------------------------------
+        // Location
+        // ----------------------------------------------------------
         if let gf = entry.geofence {
             guard let loc = location.currentLocation else { return false }
-            if !location.isWithinGeofence(gf, from: loc) { return false }
+            if !location.isWithinGeofence(gf, from: loc) {
+                return false
+            }
         }
 
-        // weather
-        if let required = entry.weather {
-            guard let current = weather.lastWeather else { return false }
-            if current != required { return false }
+        // ----------------------------------------------------------
+        // Weather
+        // ----------------------------------------------------------
+        if let requiredWeather = entry.weather {
+            guard let currentWeather = weather.lastWeather else { return false }
+            if currentWeather != requiredWeather {
+                return false
+            }
         }
 
-        // emotion
+        // ----------------------------------------------------------
+        // Emotion
+        // ----------------------------------------------------------
         if let requiredEmotion = entry.emotion {
             guard let current = emotion.currentEmotion else { return false }
-            if current != requiredEmotion { return false }
+            if current != requiredEmotion {
+                return false
+            }
         }
 
+        // All required conditions match
         return true
     }
 }
-
