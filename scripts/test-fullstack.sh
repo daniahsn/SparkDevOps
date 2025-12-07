@@ -40,7 +40,7 @@ CREATE_RESPONSE=$(curl -s -X POST $API_URL/api/entries \
 if echo "$CREATE_RESPONSE" | grep -q "id"; then
     echo "✅ Entry created successfully"
     echo "$CREATE_RESPONSE" | python3 -m json.tool | head -10
-    ENTRY_ID=$(echo "$CREATE_RESPONSE" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+    ENTRY_ID=$(echo "$CREATE_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['id'])" 2>/dev/null)
     echo "Entry ID: $ENTRY_ID"
 else
     echo "❌ Failed to create entry"
