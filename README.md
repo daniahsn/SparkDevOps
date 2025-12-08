@@ -2,211 +2,327 @@
 
 [![CI/CD Pipeline](https://github.com/daniahsn/SparkDevOps/actions/workflows/ci.yml/badge.svg)](https://github.com/daniahsn/SparkDevOps/actions/workflows/ci.yml)
 
-## Authors
-
-**Names:** Sangitha, Dania and Julius
-
-## Project Mentor
-
-**Name:** Stacy
-
-**Date of Meeting:** October 31
-
----
-
-## A4 Submission
-
-You can access the A4 submission here: https://docs.google.com/document/d/1hZSMWkMfXquq6jYkNfozzqEGnjY6hOqaJDpuf-w7EPE/edit?usp=sharing
-
----
-
-## Project Overview
-
-Spark is a journaling app with conditional unlock features. This repository includes:
-- **iOS App**: SwiftUI-based journaling application (Xcode project)
+@ -27,6 +27,124 @@ Spark is a journaling app with conditional unlock features. This repository incl
 - **Backend API**: Flask-based REST API for managing journal entries
 - **DevOps Infrastructure**: Containerization, CI/CD, and automation
+
+### What We've Accomplished
+
+**Full-Stack Journaling Application:**
+- Built a complete iOS journaling app using SwiftUI with a modern, intuitive interface
+- Created a RESTful backend API using Flask with full CRUD operations for journal entries
+- Implemented conditional unlock system that allows entries to be locked behind location, weather, emotion, or time-based conditions
+- Integrated real-time location services, weather API, and emotion tracking
+
+**DevOps & Infrastructure:**
+- Containerized the backend using Docker with proper health checks and volume mounting
+- Set up Docker Compose for easy local development and deployment
+- Implemented CI/CD pipeline using GitHub Actions that automatically runs tests, linting, and builds
+- Created comprehensive test suite with pytest and coverage reporting
+- Built Makefile for standardized development commands
+
+**Key Features:**
+- **Conditional Unlocks**: Entries can be locked behind:
+  - **Location-based**: Unlock when you return to a specific location (geofencing)
+  - **Weather-based**: Unlock when specific weather conditions occur
+  - **Emotion-based**: Unlock when you're feeling a specific emotion
+  - **Time-based**: Unlock after a certain date/time
+- **Real-time Monitoring**: The app continuously monitors location, weather, and emotion to automatically unlock entries when conditions are met
+- **Persistent Storage**: All entries are stored in JSON format with proper date/time handling
+- **Modern UI**: Beautiful SwiftUI interface with custom branding, animations, and responsive design
+
+---
+
+## Code Explanation & Architecture
+
+### Backend API (`backend/app.py`)
+
+The Flask backend provides a RESTful API for managing journal entries. Key components:
+
+**Entry Management:**
+- **Date Handling**: The API normalizes all dates to ISO8601 format with timezone (required for Swift compatibility). See `format_iso8601()` and `parse_date()` functions (lines 23-58)
+- **Data Persistence**: Entries are stored in JSON format using atomic writes to prevent file corruption. See `save_entries()` function (lines 94-109)
+- **CORS Support**: Enabled for iOS app integration (line 18)
+
+**API Endpoints:**
+- `GET /health` - Health check endpoint for monitoring
+- `GET /api/entries` - Retrieve all journal entries
+- `GET /api/entries/<id>` - Get a specific entry by UUID (case-insensitive)
+- `POST /api/entries` - Create a new entry with validation
+- `PUT /api/entries/<id>` - Update an entry (supports partial updates)
+- `DELETE /api/entries/<id>` - Delete an entry
+- `POST /api/entries/<id>/unlock` - Manually unlock an entry
+
+**Key Implementation Details:**
+- All entries are normalized before being returned to ensure consistent date formatting
+- UUID comparison is case-insensitive for better compatibility
+- Partial updates are supported - only provided fields are updated
+- Atomic file writes prevent data corruption during concurrent access
+
+### iOS App Architecture
+
+**Main Components:**
+
+1. **AppEnvironment** (`Spark/AppEnvironment.swift`):
+   - Manages shared services (Location, Weather, Emotion, Storage)
+   - Provides dependency injection through SwiftUI's environment system
+
+2. **Services Layer** (`Spark/Services/`):
+   - **APIClient.swift**: Handles all HTTP requests to the backend API
+     - Uses async/await for modern Swift concurrency
+     - Includes comprehensive error handling and logging
+     - Configurable base URL for different environments (simulator vs physical device)
+   - **StorageService.swift**: Manages local entry storage and syncs with backend
+   - **LocationService.swift**: Handles CoreLocation integration and geofencing
+   - **WeatherService.swift**: Fetches weather data from external API
+   - **EmotionService.swift**: Tracks current user emotion state
+   - **UnlockService.swift**: Core logic for determining if an entry should unlock
+     - Checks all conditions (location, weather, emotion, time)
+     - Returns `true` only if all set conditions are met
+
+3. **Views**:
+   - **HomeView.swift**: Main screen showing mood picker, status cards, and recently unlocked entries
+   - **CreateView.swift**: Multi-step flow for creating new entries with unlock conditions
+   - **SearchView.swift**: Search and filter entries
+   - **NoteDetailView.swift**: View individual entry details
+
+**Unlock Logic** (`Spark/Services/UnlockService.swift`):
+The unlock service implements the core conditional unlock feature:
+- If an entry has no conditions set, it unlocks immediately
+- Location: Checks if current location is within the geofence radius
+- Weather: Compares current weather with required weather condition
+- Emotion: Matches current emotion with required emotion
+- Time: Checks if current time is after `earliestUnlock` date
+- All conditions must be satisfied simultaneously for unlock
+
+**Data Model**:
+- `SparkEntry`: Core data structure with fields for title, content, unlock conditions, and metadata
+- All dates use ISO8601 format for compatibility between Swift and Python
+
+### DevOps Infrastructure
+
+**Docker Setup** (`docker-compose.yml`):
+- Single service configuration for the backend API
+- Volume mounting for persistent data storage (`./data:/data`)
+- Health checks configured for container monitoring
+- Port mapping: `5001:5000` (host:container)
+
+**CI/CD Pipeline** (`.github/workflows/ci.yml`):
+- Runs on every push/PR to `main` or `develop` branches
+- Steps:
+  1. Lint code using flake8
+  2. Run pytest with coverage reporting
+  3. Build Docker image
+  4. Test Docker Compose setup
+- Ensures code quality before merging
+
+**Makefile**:
+Provides standardized commands for common operations:
+- `make build` - Build Docker images
+- `make up` - Start services
+- `make test` - Run test suite
+- `make lint` - Run linting checks
+- See `make help` for full list
 
 ---
 
 ## DevOps Infrastructure
+@ -176,6 +294,198 @@ cd SparkDevOps
+1. In XCode select your iPhone or a simulator phone (preferably one of the newer ones)
+2. Press the play button to build and run the application.
 
-This project includes a complete DevOps setup with containerization, automated testing, and CI/CD pipelines.
+**Important: Backend Connection**
+- The iOS app connects to the backend API at `http://localhost:5001` (for iOS Simulator)
+- For physical devices, update `APIClient.swift` baseURL to your Mac's IP address:
+  ```swift
+  private let baseURL = "http://<your-mac-ip>:5001"
+  ```
+  Find your Mac's IP with: `ifconfig | grep 'inet '`
 
-### Architecture
+**Testing the Full Stack:**
 
-- **Backend API**: Python Flask REST API (`backend/`)
-- **Containerization**: Docker with Docker Compose orchestration
-- **CI/CD**: GitHub Actions for automated testing and building
-- **Testing**: Pytest with coverage reporting
-- **Automation**: Makefile for standardized commands
+1. **Start the Backend:**
+   ```bash
+   make up
+   # Verify it's running:
+   curl http://localhost:5001/health
+   ```
 
-### Quick Start (Backend)
+2. **Run the iOS App:**
+   - Open the project in Xcode
+   - Select a simulator or device
+   - Build and run (⌘R)
 
-#### Prerequisites
+3. **Test Features:**
+   - **Create Entry**: Tap "Create" tab → Enter title/content → Set unlock conditions → Save
+   - **View Entries**: Check "Home" tab for recently unlocked entries
+   - **Unlock Conditions**: 
+     - Set location lock and move to that location
+     - Set weather lock and wait for matching weather
+     - Set emotion lock and select matching emotion
+   - **Search**: Use "Search" tab to find entries
 
-- Docker and Docker Compose installed
-- Python 3.11+ (for local development)
-- Make (optional, for convenience commands)
+---
 
-#### Using Docker Compose (Recommended)
+## How to Test/View What You've Built
 
+### Backend API Testing
+
+**1. Health Check:**
 ```bash
-# Build and start services
-make build
-make up
-
-# Or use docker-compose directly
-docker-compose up -d
+curl http://localhost:5001/health
+# Expected: {"status": "healthy", "service": "spark-backend"}
 ```
 
-The backend API will be available at `http://localhost:5001`
-
-#### Using Makefile Commands
-
+**2. Create an Entry:**
 ```bash
-make help          # Show all available commands
-make build         # Build Docker images
-make up            # Start services
-make down          # Stop services
-make test          # Run tests
-make lint          # Run linting checks
-make logs          # View service logs
-make clean         # Clean up containers and volumes
+curl -X POST http://localhost:5001/api/entries \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Test Entry",
+    "content": "This is a test journal entry",
+    "emotion": "happy",
+    "weather": "clear"
+  }'
 ```
 
-#### Local Development (Without Docker)
-
+**3. Get All Entries:**
 ```bash
-# Install dependencies
-make install
-# or
-pip install -r backend/requirements.txt
-
-# Run the application
-cd backend
-python app.py
+curl http://localhost:5001/api/entries
 ```
 
-### API Endpoints
-
-- `GET /health` - Health check
-- `GET /api/entries` - Get all journal entries
-- `GET /api/entries/<id>` - Get a specific entry
-- `POST /api/entries` - Create a new entry
-- `PUT /api/entries/<id>` - Update an entry
-- `DELETE /api/entries/<id>` - Delete an entry
-- `POST /api/entries/<id>/unlock` - Unlock an entry
-
-### Testing
-
+**4. Get Specific Entry:**
 ```bash
-# Run all tests
+# Replace <entry-id> with actual UUID from create response
+curl http://localhost:5001/api/entries/<entry-id>
+```
+
+**5. Update an Entry:**
+```bash
+curl -X PUT http://localhost:5001/api/entries/<entry-id> \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Updated Title"}'
+```
+
+**6. Unlock an Entry:**
+```bash
+curl -X POST http://localhost:5001/api/entries/<entry-id>/unlock
+```
+
+**7. Delete an Entry:**
+```bash
+curl -X DELETE http://localhost:5001/api/entries/<entry-id>
+```
+
+### Automated Testing
+
+**Run All Tests:**
+```bash
 make test
+```
 
-# Run tests with coverage
+**Run Tests with Coverage:**
+```bash
 cd backend
 pytest -v --cov=app --cov-report=term-missing
 ```
 
-### CI/CD Pipeline
-
-The GitHub Actions workflow (`.github/workflows/ci.yml`) automatically:
-
-1. **Lints** code on every push/PR
-2. **Runs tests** with coverage reporting
-3. **Builds Docker images** to verify containerization
-4. **Tests Docker Compose** setup
-
-The pipeline runs on:
-- Push to `main` or `develop` branches
-- Pull requests to `main` or `develop` branches
-
-### Project Structure
-
-```
-SparkDevOps/
-├── backend/              # Backend API service
-│   ├── app.py           # Flask application
-│   ├── test_app.py      # Test suite
-│   ├── requirements.txt # Python dependencies
-│   └── Dockerfile       # Container definition
-├── Spark/               # iOS app (SwiftUI)
-├── docker-compose.yml   # Service orchestration
-├── Makefile            # Automation commands
-├── .github/
-│   └── workflows/
-│       └── ci.yml      # CI/CD pipeline
-└── data/               # Persistent data storage
-```
-
----
-
-## iOS App (Xcode Project)
-
-### Prerequisites
-
-* macOS with the latest version compatible with your Xcode installation
-* Xcode installed from the Mac App Store
-
-### Clone the Repository
-
+**Run Tests in Docker:**
 ```bash
-git clone <repository-url>
-cd SparkDevOps
+docker-compose exec backend pytest -v
 ```
 
-### Open the Project in Xcode
+**View Test Coverage:**
+The test suite (`backend/test_app.py`) covers:
+- Health check endpoint
+- CRUD operations (Create, Read, Update, Delete)
+- Entry unlocking
+- Error handling (404s, validation errors)
+- Date normalization
 
-1. Locate the `.xcodeproj` or `.xcworkspace` file inside the cloned repository.
-2. Double-click to open it in Xcode, **or** open via Terminal:
+### iOS App Testing
 
-   ```bash
-   open *.xcodeproj
-   ```
+**Manual Testing Checklist:**
 
-   or
+1. **Entry Creation:**
+   - ✅ Create entry with title and content
+   - ✅ Set location-based unlock condition
+   - ✅ Set weather-based unlock condition
+   - ✅ Set emotion-based unlock condition
+   - ✅ Set time-based unlock (earliestUnlock)
+   - ✅ Create entry without any conditions (should unlock immediately)
 
-   ```bash
-   open *.xcworkspace
-   ```
+2. **Entry Viewing:**
+   - ✅ View all entries on Home screen
+   - ✅ View recently unlocked entries
+   - ✅ View entry details
+   - ✅ Search entries
 
-### Build and Run
+3. **Unlock Conditions:**
+   - ✅ Location: Move to geofence location → entry unlocks
+   - ✅ Weather: Wait for matching weather → entry unlocks
+   - ✅ Emotion: Select matching emotion → entry unlocks
+   - ✅ Time: Wait until earliestUnlock date → entry unlocks
+   - ✅ Multiple conditions: All must be met simultaneously
 
-1. In XCode select your iPhone or a simulator phone (preferably one of the newer ones)
-2. Press the play button to build and run the application.
+4. **UI/UX:**
+   - ✅ Mood picker updates current emotion
+   - ✅ Status cards show current weather and location
+   - ✅ Refresh button updates all data
+   - ✅ Smooth navigation between screens
+   - ✅ Empty states display correctly
+
+**Testing Unlock Conditions:**
+
+1. **Location Unlock:**
+   - Create entry with geofence at your current location
+   - Move away, then return to location
+   - Entry should unlock automatically
+
+2. **Weather Unlock:**
+   - Create entry with current weather condition
+   - Wait for weather to change, then return to original condition
+   - Entry should unlock
+
+3. **Emotion Unlock:**
+   - Create entry with specific emotion
+   - Select that emotion in mood picker
+   - Entry should unlock immediately
+
+4. **Time Unlock:**
+   - Create entry with `earliestUnlock` set to future date
+   - Entry should remain locked until that date
+   - After date passes, entry unlocks (if other conditions met)
+
+### Viewing Logs
+
+**Backend Logs:**
+```bash
+make logs
+# or
+docker-compose logs -f backend
+```
+
+**Check Service Status:**
+```bash
+make health
+# or
+curl http://localhost:5001/health | python3 -m json.tool
+```
+
+### Data Inspection
+
+**View Stored Entries:**
+```bash
+cat data/spark_entries.json | python3 -m json.tool
+```
+
+**Clear All Data:**
+```bash
+make clean
+# This removes containers, volumes, and data files
+```
 
 ---
 
 ## Development Timeline
-
-- **Nov 13 – 17**: Containerize the backend and verify with Docker Compose locally
-- **Nov 18 – 22**: Add tests and configure CI to run linting, tests, and builds
-- **Nov 23 – 25**: Polish documentation, Makefile automation, and reproducibility checks
-
----
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Ensure tests pass: `make test`
-4. Ensure linting passes: `make lint`
-5. Submit a pull request
-
-The CI pipeline will automatically validate your changes.
-
-### Branch Protection
-
-This repository uses branch protection rules to ensure code quality. See [docs/BRANCH_PROTECTION.md](docs/BRANCH_PROTECTION.md) for setup instructions.
-
-**Quick Setup:**
-1. Go to Settings → Branches
-2. Add rule for `main` branch
-3. Enable: Require PR, Require status checks (lint, test, build, docker-compose), Require approvals
-
----
-
-## Questions?
-
-If you have questions or encounter issues, please reach out to us! 
